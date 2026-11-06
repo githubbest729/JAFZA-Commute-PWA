@@ -646,7 +646,30 @@
   }
 
   /* ---------- init ---------- */
+  
+  /* ---------- 2026 Nol Balance Calculator ---------- */
+  function initNolCalc() {
+    const btn = $('#btn-check-nol');
+    const input = $('#nol-balance-input');
+    const res = $('#nol-result');
+    if (!btn || !input || !res) return;
+    btn.addEventListener('click', () => {
+      const val = parseFloat(input.value);
+      if (isNaN(val) || val < 0) {
+        res.innerHTML = '<span style="color:var(--bad)">Please enter a valid balance amount.</span>';
+        return;
+      }
+      if (val >= 7.50) {
+        res.innerHTML = `<span style="color:var(--ok)">&#10004; Balance AED ${val.toFixed(2)} is sufficient! (Minimum required: AED 7.50)</span>`;
+      } else {
+        const diff = (7.50 - val).toFixed(2);
+        res.innerHTML = `<span style="color:var(--bad)">&#9888; Low Balance! AED ${val.toFixed(2)} is below minimum AED 7.50. Recharge at least AED ${diff} to board RTA buses.</span>`;
+      }
+    });
+  }
+
   function init() {
+    initNolCalc();
     const launch = handleLaunch();
     absolutizeMeta();
     applyTheme(state.theme, false);

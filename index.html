@@ -149,6 +149,16 @@
       </button>
     </div>
 
+        <h2 class="h2">Nol Card Balance Check</h2>
+    <div class="panel nol-calc">
+      <p style="font-size:0.9rem; margin-bottom:10px;">Verify if your Nol card meets the mandatory RTA AED 7.50 check-in threshold:</p>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <input type="number" id="nol-balance-input" step="0.5" placeholder="Enter AED balance (e.g. 15)" style="padding:10px; border-radius:10px; border:1px solid var(--border); font-size:1rem; flex:1; background:var(--surface); color:var(--text);">
+        <button type="button" class="btn primary" id="btn-check-nol" style="padding:10px 16px;">Check</button>
+      </div>
+      <div id="nol-result" style="margin-top:10px; font-weight:600; font-size:0.95rem;"></div>
+    </div>
+
     <h2 class="h2">App</h2>
     <div class="panel list-rows">
       <button type="button" class="row" id="btn-a2hs"><svg aria-hidden="true"><use href="#i-plus-box"/></svg><span>Add to Home Screen<small>Step-by-step guide for iPhone</small></span></button>
