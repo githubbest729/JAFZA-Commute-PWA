@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Offline - Jebel Ali Transit Guide</title>
+  <meta name="theme-color" content="#0b2545">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100dvh; display: grid; place-items: center; text-align: center;
+      padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+      background: radial-gradient(120% 80% at 50% 0%, #17406b 0%, #0b2545 60%, #060f1e 100%); color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    }
+    main { max-width: 420px; }
+    .ico { width: 84px; height: 84px; margin: 0 auto 20px; border-radius: 24px; background: #f5b301; color: #0b2545; display: grid; place-items: center; }
+    .ico svg { width: 46px; height: 46px; }
+    h1 { font-size: 1.6rem; margin: 0 0 10px; }
+    p { margin: 0 0 22px; line-height: 1.5; opacity: .85; }
+    a, button { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 26px; border-radius: 16px; font: inherit; font-weight: 700; text-decoration: none; border: 0; cursor: pointer; margin: 4px; }
+    .primary { background: #f5b301; color: #0b2545; }
+    .ghost { background: rgba(255, 255, 255, .14); color: #fff; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r=".8" fill="currentColor"/><path d="M3 3l18 18"/></svg>
+    </div>
+    <h1>You're offline</h1>
+    <p>This page isn't saved yet. If you've opened the guide once before, your bus times still work without a connection.</p>
+    <a class="primary" href="./">Open timetable</a>
+    <button class="ghost" type="button" onclick="location.reload()">Try again</button>
+  </main>
+  <script>
+    addEventListener('online', function () { location.href = './'; });
+  </script>
+</body>
+</html>

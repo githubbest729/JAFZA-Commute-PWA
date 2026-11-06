@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>JAFZA PWA Builder</title>
+  <style>
+    :root { color-scheme: light dark; --bg: #f4f6fa; --card: #fff; --text: #0b1b2b; --muted: #5a6b7e; --accent: #0a62d6; --line: #d6dde7; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #0b1220; --card: #131c2e; --text: #e8eef7; --muted: #93a3b8; --accent: #5aa2ff; --line: #26334a; } }
+    body { margin: 0; font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
+    main { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+    h1 { font-size: 1.5rem; margin: 0 0 4px; } h2 { font-size: 1.05rem; margin: 0 0 8px; }
+    p { margin: 0 0 12px; color: var(--muted); }
+    section { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; margin-top: 16px; }
+    label { display: block; font-weight: 600; margin-bottom: 4px; }
+    input[type=url] { width: 100%; min-height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: inherit; font: inherit; }
+    button { min-height: 48px; padding: 0 22px; border-radius: 12px; border: 0; background: var(--accent); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+    button.alt { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+    button:disabled { opacity: .55; cursor: wait; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    pre { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: .8rem; max-height: 220px; overflow: auto; white-space: pre-wrap; margin: 12px 0 0; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 12px; margin-top: 14px; }
+    .grid figure { margin: 0; text-align: center; font-size: .72rem; color: var(--muted); }
+    .grid img { width: 72px; height: 72px; object-fit: contain; background: repeating-conic-gradient(#8883 0 25%, transparent 0 50%) 0 0/14px 14px; border-radius: 12px; }
+    .og img { width: 100%; height: auto; border-radius: 12px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>JAFZA PWA Builder</h1>
+  <p>Runs entirely in your browser. Generates every icon from the bus SVG with Canvas and packs the whole project into <b>jebel-ali-pwa.zip</b>.
+     Open this page from your deployed site (or <code>python3 -m http.server</code>), not from a file:// path.</p>
+
+  <section>
+    <h2>1. One-click ZIP</h2>
+    <label for="base">Your GitHub Pages URL (used for Open Graph tags)</label>
+    <input id="base" type="url" placeholder="https://your-username.github.io/jebel-ali-pwa/">
+    <div class="row">
+      <button id="zip">Download jebel-ali-pwa.zip</button>
+    </div>
+    <pre id="log" aria-live="polite">Ready.</pre>
+  </section>
+
+  <section>
+    <h2>2. Icons (SVG &rarr; Canvas)</h2>
+    <p>Pixel-perfect PNGs drawn from the same SVG. Missing files in the ZIP are filled in from here automatically.</p>
+    <div class="row"><button class="alt" id="gen">Generate &amp; preview</button></div>
+    <div class="grid" id="grid"></div>
+    <div class="og" id="og"></div>
+  </section>
+</main>
+
+<script>
+/* ============ SVG sources (single source of truth for all artwork) ============ */
+const BUS = `
+  <rect x="124" y="196" width="22" height="64" rx="8" fill="#cbd5e1"/><rect x="366" y="196" width="22" height="64" rx="8" fill="#cbd5e1"/>
+  <rect x="136" y="116" width="240" height="268" rx="40" fill="#fff"/>
+  <rect x="160" y="138" width="192" height="36" rx="10" fill="#0b2545"/>
+  <circle cx="190" cy="156" r="6" fill="#f5b301"/><circle cx="212" cy="156" r="6" fill="#f5b301"/><rect x="236" y="150" width="96" height="12" rx="6" fill="#f5b301"/>
+  <rect x="156" y="188" width="200" height="106" rx="18" fill="url(#gl)"/><rect x="253" y="188" width="6" height="106" fill="#fff"/>
+  <circle cx="188" cy="338" r="20" fill="#f5b301"/><circle cx="324" cy="338" r="20" fill="#f5b301"/><rect x="226" y="328" width="60" height="20" rx="10" fill="#cbd5e1"/>
+  <rect x="150" y="372" width="56" height="44" rx="12" fill="#0b1220"/><rect x="306" y="372" width="56" height="44" rx="12" fill="#0b1220"/>
+  <rect x="92" y="438" width="328" height="14" rx="7" fill="#f5b301"/>
+  <circle cx="136" cy="445" r="4" fill="#0b2545"/><circle cx="196" cy="445" r="4" fill="#0b2545"/><circle cx="256" cy="445" r="4" fill="#0b2545"/><circle cx="316" cy="445" r="4" fill="#0b2545"/><circle cx="376" cy="445" r="4" fill="#0b2545"/>`;
+const DEFS = `<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b2545"/><stop offset="1" stop-color="#13497a"/></linearGradient>
+  <linearGradient id="gl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe6ff"/><stop offset="1" stop-color="#6fb8ec"/></linearGradient></defs>`;
+
+/* kind: any (rounded, transparent corners) | maskable (full bleed, content in safe zone) | square (full bleed, iOS) */
+function iconSvg(kind) {
+  if (kind === 'any') return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">${DEFS}<rect width="512" height="512" rx="112" fill="url(#bg)"/><circle cx="400" cy="118" r="50" fill="#f5b301"/>${BUS}</svg>`;
+  if (kind === 'square') return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">${DEFS}<rect width="512" height="512" fill="url(#bg)"/><circle cx="400" cy="118" r="50" fill="#f5b301"/>${BUS}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">${DEFS}<rect width="512" height="512" fill="url(#bg)"/><g transform="translate(256 256) scale(.84) translate(-256 -284)">${BUS}</g></svg>`;
+}
+function ogSvg() {
+  const chips = ['F43', 'F44', 'F46', 'F54', '99', '91'];
+  const cols = ['#e4572e', '#2a9d8f', '#7b2cbf', '#f4a100', '#0077b6', '#c1121f'];
+  const chipSvg = chips.map((c, i) => `<g transform="translate(${100 + i * 128} 470)"><rect width="112" height="64" rx="18" fill="${cols[i]}"/><text x="56" y="43" text-anchor="middle" font-size="30" font-weight="800" fill="#fff">${c}</text></g>`).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" font-family="-apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">${DEFS}
+    <rect width="1200" height="630" fill="url(#bg)"/>
+    <circle cx="1010" cy="120" r="170" fill="#f5b301" opacity=".18"/><circle cx="1010" cy="120" r="90" fill="#f5b301" opacity=".35"/>
+    <g transform="translate(790 120) scale(.78)">${BUS}</g>
+    <text x="100" y="160" font-size="26" font-weight="700" letter-spacing="5" fill="#f5b301">OFFLINE-FIRST COMMUTE GUIDE</text>
+    <text x="100" y="250" font-size="74" font-weight="800" fill="#fff">Jebel Ali &amp;</text>
+    <text x="100" y="334" font-size="74" font-weight="800" fill="#fff">Discovery Gardens</text>
+    <text x="100" y="404" font-size="44" font-weight="600" fill="#bfe6ff">Bus Timetable</text>
+    ${chipSvg}
+    <text x="100" y="584" font-size="26" fill="#9fb6d3">Next-bus countdown  |  Pocket mode  |  Metro links  |  Works with no signal</text></svg>`;
+}
+
+/* ============ SVG -> Canvas -> PNG ============ */
+function svgToPng(svg, w, h) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const ctx = c.getContext('2d'); ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, w, h);
+      c.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png');
+    };
+    img.onerror = () => reject(new Error('SVG failed to load'));
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  });
+}
+/* ICO container with embedded PNG frames */
+async function buildIco(sizes) {
+  const pngs = [];
+  for (const s of sizes) pngs.push(new Uint8Array(await (await svgToPng(iconSvg('any'), s, s)).arrayBuffer()));
+  const head = 6 + 16 * pngs.length;
+  const total = head + pngs.reduce((a, p) => a + p.length, 0);
+  const buf = new ArrayBuffer(total), dv = new DataView(buf), u8 = new Uint8Array(buf);
+  dv.setUint16(2, 1, true); dv.setUint16(4, pngs.length, true);
+  let off = head;
+  pngs.forEach((p, i) => {
+    const e = 6 + i * 16, s = sizes[i];
+    dv.setUint8(e, s >= 256 ? 0 : s); dv.setUint8(e + 1, s >= 256 ? 0 : s); dv.setUint16(e + 4, 1, true); dv.setUint16(e + 6, 32, true);
+    dv.setUint32(e + 8, p.length, true); dv.setUint32(e + 12, off, true);
+    u8.set(p, off); off += p.length;
+  });
+  return new Blob([buf], { type: 'image/x-icon' });
+}
+const ICON_SIZES = [72, 96, 128, 144, 152, 192, 384, 512];
+async function generateAll() {
+  const out = {};
+  for (const s of ICON_SIZES) out[`icons/icon-${s}.png`] = await svgToPng(iconSvg('any'), s, s);
+  out['icons/icon-maskable-192.png'] = await svgToPng(iconSvg('maskable'), 192, 192);
+  out['icons/icon-maskable-512.png'] = await svgToPng(iconSvg('maskable'), 512, 512);
+  out['apple-touch-icon.png'] = await svgToPng(iconSvg('square'), 180, 180);
+  out['og-image.png'] = await svgToPng(ogSvg(), 1200, 630);
+  out['favicon.ico'] = await buildIco([16, 32, 48]);
+  out['favicon.svg'] = new Blob([iconSvg('any')], { type: 'image/svg+xml' });
+  return out;
+}
+window.JAF = { generateAll, iconSvg, ogSvg };
+
+/* ============ UI ============ */
+const $ = (s) => document.querySelector(s);
+const log = (m) => { const l = $('#log'); l.textContent += '\n' + m; l.scrollTop = l.scrollHeight; };
+
+$('#gen').onclick = async () => {
+  const files = await generateAll();
+  const grid = $('#grid'); grid.innerHTML = '';
+  for (const [name, blob] of Object.entries(files)) {
+    if (name === 'og-image.png') { $('#og').innerHTML = `<img alt="OG preview" src="${URL.createObjectURL(blob)}">`; continue; }
+    const f = document.createElement('figure');
+    f.innerHTML = `<img alt="" src="${URL.createObjectURL(blob)}"><figcaption>${name.replace('icons/', '')}</figcaption>`;
+    grid.appendChild(f);
+  }
+};
+
+const FILES = [
+  'index.html', 'manifest.webmanifest', 'sw.js', 'offline.html', 'favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'og-image.png',
+  'robots.txt', '.nojekyll', 'README.md', 'css/styles.css', 'js/app.js', 'js/transit-data.js', 'tools/builder.html',
+  ...ICON_SIZES.map((s) => `icons/icon-${s}.png`), 'icons/icon-maskable-192.png', 'icons/icon-maskable-512.png'
+];
+
+function loadJsZip() {
+  if (window.JSZip) return Promise.resolve();
+  const urls = ['https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'];
+  return urls.reduce((p, u) => p.catch(() => new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = u; s.onload = res; s.onerror = () => rej(new Error('load ' + u)); document.head.appendChild(s);
+  })), Promise.reject());
+}
+
+/* Fallback when the JSZip CDN is unreachable: tiny store-only ZIP writer (no compression, fully valid .zip). */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = (u8) => { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC_T[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+function simpleZip(entries) {               // entries: [{ name, data: Uint8Array }]
+  const enc = new TextEncoder(), parts = [], central = [];
+  const now = new Date(), dosT = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+  const dosD = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+  let offset = 0;
+  for (const { name, data } of entries) {
+    const nm = enc.encode(name), crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(10, dosT, true); lh.setUint16(12, dosD, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, nm.length, true);
+    parts.push(new Uint8Array(lh.buffer), nm, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(12, dosT, true); ch.setUint16(14, dosD, true);
+    ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, nm.length, true); ch.setUint32(42, offset, true);
+    central.push(new Uint8Array(ch.buffer), nm);
+    offset += 30 + nm.length + data.length;
+  }
+  const cSize = central.reduce((a, b) => a + b.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true); end.setUint32(12, cSize, true); end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: 'application/zip' });
+}
+const toU8 = async (d) => typeof d === 'string' ? new TextEncoder().encode(d) : new Uint8Array(await d.arrayBuffer());
+
+$('#zip').onclick = async () => {
+  const btn = $('#zip'); btn.disabled = true; $('#log').textContent = 'Starting...';
+  try {
+    let hasJsZip = true;
+    try { await loadJsZip(); } catch (e) { hasJsZip = false; log('JSZip CDN unreachable, using built-in ZIP writer.'); }
+    let gen = null;
+    let base = $('#base').value.trim();
+    if (base && !base.endsWith('/')) base += '/';
+    const collected = [];
+    for (const path of FILES) {
+      let data = null;
+      try {
+        const r = await fetch('../' + path, { cache: 'no-store' });
+        if (r.ok) data = path === 'index.html' || path === 'README.md' ? await r.text() : await r.blob();
+      } catch (e) { /* try generated */ }
+      if (!data) {
+        gen = gen || await generateAll();
+        if (gen[path]) { data = gen[path]; log('generated ' + path); }
+      }
+      if (!data) { log('SKIPPED (not found) ' + path); continue; }
+      if (path === 'index.html' && base) data = data.replace(/https:\/\/YOUR-USERNAME\.github\.io\/jebel-ali-pwa\//g, base);
+      collected.push({ name: 'jebel-ali-pwa/' + path, data });
+    }
+    log('Compressing...');
+    let blob;
+    if (hasJsZip) {
+      const zip = new JSZip();
+      collected.forEach((f) => zip.file(f.name, f.data));
+      blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 9 } });
+    } else {
+      blob = simpleZip(await Promise.all(collected.map(async (f) => ({ name: f.name, data: await toU8(f.data) }))));
+    }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'jebel-ali-pwa.zip';
+    document.body.appendChild(a); a.click(); a.remove();
+    log('Done: jebel-ali-pwa.zip (' + Math.round(blob.size / 1024) + ' KB, ' + collected.length + ' files)');
+  } catch (e) { log('Error: ' + e.message + '. Check you opened this page over http(s).'); }
+  btn.disabled = false;
+};
+</script>
+</body>
+</html>
