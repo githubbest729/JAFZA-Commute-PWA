@@ -175,7 +175,7 @@
   }
   function stopBadges(id, fare) {
     const s = stopById[id];
-    return `<div class="badges"><span class="b">${s.type === 'metro' ? 'Metro' : 'Bus stop'}</span><span class="b ${s.shelter}">${SHELTER[s.shelter]}</span>${fare ? `<span class="b fare">${fare.replace(/&bull;/g, '•')}</span>` : ''}</div>`;
+    return `<div class="badges"><span class="b">${s.type === 'metro' ? 'Metro' : 'Bus stop'}</span><span class="b ${s.shelter}">${SHELTER[s.shelter]}</span>${fare ? `<span class="b fare">${esc(fare).replace(/&amp;bull;/g, '•')}</span>` : ''}</div>`;
   }
   function cardHtml(c, dir) {
     const { r, seq, boardId, idx, deps } = c;
@@ -412,7 +412,7 @@
     const on = !!wakeLock;
     const b = $('#btn-wake');
     b.setAttribute('aria-pressed', String(on));
-    $('#wake-text').textContent = 'Keep screen awake: ' + (on ? 'On' : 'Off');
+    $('#wake-text').textContent = on ? 'Keep screen awake: Active (Locked On)' : 'Keep screen awake: Off'; $('#btn-wake').classList.toggle('is-active', on);
     $('#g-hint').textContent = wakeMsg ? wakeMsg : 'wakeLock' in navigator
       ? (on ? 'Screen will stay on. Prop the phone up and watch the countdown.' : 'Turn on to stop the screen dimming while you wait.')
       : 'Screen Wake Lock is not supported in this browser (iOS needs 16.4 or newer).';
@@ -645,17 +645,13 @@
     return rid && routeById[rid] ? { rid, dir: q.get('dir') === 'in' ? 'in' : 'out', stop: q.get('stop') || '' } : null;
   }
 
-  /* ---------- init ---------- */
-  
-  
-  /* ---------- 2026 Nol Balance Calculator (Persistent) ---------- */
+    /* ---------- 2026 Nol Balance Calculator (Persistent) ---------- */
   function initNolCalc() {
     const btn = $('#btn-check-nol');
     const input = $('#nol-balance-input');
     const res = $('#nol-result');
     if (!btn || !input || !res) return;
 
-    // Load saved balance
     const saved = store.get('nol_bal', null);
     if (saved !== null) {
       input.value = saved;
@@ -685,6 +681,31 @@
     });
   }
 
+/* ---------- init ---------- */
+  function init() {
+    const launch = handleLaunch();
+    absolutizeMeta();
+    applyTheme(state.theme, false);
+    bind();
+    $('#about-ver').textContent = `Schedule data ${D.DATA_VERSION}`;
+    renderControls(); renderBoardSelect(); renderAll(); tick(true); initNolCalc();
+    setInterval(tick, 1000);
+    updateNet(false);
+
+    if (launch) setTimeout(() => openRoute(launch.rid, launch.dir, launch.stop), 150);
+    else if (isIOS && !isStandalone() && !store.get('a2hsNever', false) && (store.get('a2hsShown', 0) < 3)) {
+      setTimeout(() => {
+        if ($('.sheet.open') || glanceOpen()) return;   // never interrupt something the user opened
+        store.set('a2hsShown', store.get('a2hsShown', 0) + 1); openA2hs();
+      }, 3500);
+    }
+
+    if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => { /* offline support unavailable */ });
+        navigator.serviceWorker.ready.then(() => { state.swReady = true; updateNet(false); });
+      });
+    }
   }
   init();
 })();
