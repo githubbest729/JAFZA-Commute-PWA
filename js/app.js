@@ -175,7 +175,7 @@
   }
   function stopBadges(id, fare) {
     const s = stopById[id];
-    return `<div class="badges"><span class="b">${s.type === 'metro' ? 'Metro' : 'Bus stop'}</span><span class="b ${s.shelter}">${SHELTER[s.shelter]}</span>${fare ? `<span class="b fare">${esc(fare)}</span>` : ''}</div>`;
+    return `<div class="badges"><span class="b">${s.type === 'metro' ? 'Metro' : 'Bus stop'}</span><span class="b ${s.shelter}">${SHELTER[s.shelter]}</span>${fare ? `<span class="b fare">${fare.replace(/&bull;/g, '•')}</span>` : ''}</div>`;
   }
   function cardHtml(c, dir) {
     const { r, seq, boardId, idx, deps } = c;
@@ -647,52 +647,44 @@
 
   /* ---------- init ---------- */
   
-  /* ---------- 2026 Nol Balance Calculator ---------- */
+  
+  /* ---------- 2026 Nol Balance Calculator (Persistent) ---------- */
   function initNolCalc() {
     const btn = $('#btn-check-nol');
     const input = $('#nol-balance-input');
     const res = $('#nol-result');
     if (!btn || !input || !res) return;
-    btn.addEventListener('click', () => {
-      const val = parseFloat(input.value);
+
+    // Load saved balance
+    const saved = store.get('nol_bal', null);
+    if (saved !== null) {
+      input.value = saved;
+      checkBalance(parseFloat(saved));
+    }
+
+    function checkBalance(val) {
       if (isNaN(val) || val < 0) {
         res.innerHTML = '<span style="color:var(--bad)">Please enter a valid balance amount.</span>';
         return;
       }
+      store.set('nol_bal', val);
       if (val >= 7.50) {
-        res.innerHTML = `<span style="color:var(--ok)">&#10004; Balance AED ${val.toFixed(2)} is sufficient! (Minimum required: AED 7.50)</span>`;
+        res.innerHTML = `<span style="color:var(--ok)">&#10004; Balance AED ${val.toFixed(2)} is sufficient! (Minimum: AED 7.50)</span>`;
       } else {
         const diff = (7.50 - val).toFixed(2);
-        res.innerHTML = `<span style="color:var(--bad)">&#9888; Low Balance! AED ${val.toFixed(2)} is below minimum AED 7.50. Recharge at least AED ${diff} to board RTA buses.</span>`;
+        res.innerHTML = `<span style="color:var(--bad)">&#9888; Low Balance! AED ${val.toFixed(2)} is below AED 7.50 minimum. Top up at least AED ${diff}.</span>`;
       }
+    }
+
+    btn.addEventListener('click', () => {
+      checkBalance(parseFloat(input.value));
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') checkBalance(parseFloat(input.value));
     });
   }
 
-  function init() {
-    initNolCalc();
-    const launch = handleLaunch();
-    absolutizeMeta();
-    applyTheme(state.theme, false);
-    bind();
-    $('#about-ver').textContent = `Schedule data ${D.DATA_VERSION}`;
-    renderControls(); renderBoardSelect(); renderAll(); tick(true);
-    setInterval(tick, 1000);
-    updateNet(false);
-
-    if (launch) setTimeout(() => openRoute(launch.rid, launch.dir, launch.stop), 150);
-    else if (isIOS && !isStandalone() && !store.get('a2hsNever', false) && (store.get('a2hsShown', 0) < 3)) {
-      setTimeout(() => {
-        if ($('.sheet.open') || glanceOpen()) return;   // never interrupt something the user opened
-        store.set('a2hsShown', store.get('a2hsShown', 0) + 1); openA2hs();
-      }, 3500);
-    }
-
-    if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => { /* offline support unavailable */ });
-        navigator.serviceWorker.ready.then(() => { state.swReady = true; updateNet(false); });
-      });
-    }
   }
   init();
 })();

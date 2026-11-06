@@ -401,3 +401,49 @@ html[data-theme="oled"] .toast { background: #000; color: var(--accent); border:
   .route:hover { box-shadow: 0 6px 24px rgba(0, 0, 0, .14); }
 }
 @media print { .tabbar, .topbar .top-actions, .toast { display: none; } }
+
+/* 2026 UX/UI Polish & Fixes */
+.cd, .rtimes .tm, .clock, .g-clock {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+#btn-wake.is-active {
+  background: #0e7a55 !important;
+  color: #ffffff !important;
+  border-color: #2ec4b6 !important;
+  box-shadow: 0 0 16px rgba(46, 196, 182, 0.4);
+}
+
+.route {
+  box-shadow: 0 4px 18px -2px rgba(11, 37, 69, 0.08), 0 2px 6px -1px rgba(11, 37, 69, 0.04);
+  transition: transform 0.15s cubic-bezier(.34, 1.56, .64, 1), box-shadow 0.15s ease;
+}
+
+.route:active {
+  transform: scale(0.985);
+}
+
+.nol-banner {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+html[data-theme="oled"] .nol-banner {
+  background: #1a1500;
+  color: #ffd60a;
+  border-color: #ffd60a;
+}
+html[data-theme="sun"] .nol-banner {
+  background: #000;
+  color: #ffe100;
+  border: 2px solid #000;
+}
