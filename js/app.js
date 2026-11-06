@@ -148,7 +148,7 @@
     return D.stops.filter((s) => seen.has(s.id));
   }
   function renderControls() {
-    $$('#seg-dir button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.dir === state.dir)));
+    $$('#seg-dir [data-dir]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.dir === state.dir)));
     $$('#chips-area .chip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.area === state.area)));
     $$('#chips-shift .chip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.shift === state.shift)));
   }
@@ -173,9 +173,9 @@
     cards.sort((a, b) => (a.deps[0] || Infinity) - (b.deps[0] || Infinity));
     return cards;
   }
-  function stopBadges(id) {
+  function stopBadges(id, fare) {
     const s = stopById[id];
-    return `<div class="badges"><span class="b">${s.type === 'metro' ? 'Metro' : 'Bus stop'}</span><span class="b ${s.shelter}">${SHELTER[s.shelter]}</span></div>`;
+    return `<div class="badges"><span class="b">${s.type === 'metro' ? 'Metro' : 'Bus stop'}</span><span class="b ${s.shelter}">${SHELTER[s.shelter]}</span>${fare ? `<span class="b fare">${esc(fare)}</span>` : ''}</div>`;
   }
   function cardHtml(c, dir) {
     const { r, seq, boardId, idx, deps } = c;
@@ -194,7 +194,7 @@
         <div class="cd" data-dep="${deps[0]}">${cdText(deps[0])}</div>
         <div class="rtimes">${deps.map((d) => `<span class="tm">${hm(d)}${dayTag(d)}</span>`).join('')}</div>
       </div>` : '<div class="empty">No departures in the next 36 hours</div>'}
-      ${stopBadges(boardId)}
+      ${stopBadges(boardId, r.fare)}
     </article>`;
   }
   function renderHero(cards) {
@@ -239,7 +239,7 @@
             <div class="rtimes">${deps.map((d) => `<span class="tm">${hm(d)}${dayTag(d)}</span>`).join('')}</div></div>` : '<div class="empty">No more departures soon</div>'}
         </article>`;
       }).join('')
-      : `<div class="panel empty"><b>No favorites yet</b>Tap the star on a route card, or on any stop inside a route, to pin it here and in Pocket mode.</div>`;
+      : `<div class="panel empty"><svg aria-hidden="true" width="44" height="44" style="margin:0 auto 8px;color:var(--gold)"><use href="#i-star"/></svg><b>No favorites yet</b>Tap the star on a route card, or on any stop inside a route, to pin it here and in Pocket mode.<br><button class="btn primary cta" type="button" data-cta="browse">Browse popular JAFZA routes</button></div>`;
   }
   function toggleFav(key) {
     const i = state.favs.indexOf(key);
@@ -288,7 +288,7 @@
       const f = isFav(k);
       const cls = (i === bIdx ? 'here' : '') + (t && t < Date.now() ? ' pass' : '');
       return `<li class="${cls}"><span class="node"></span>
-        <span class="nm"><strong>${esc(fName(s.id))}</strong><span>${stopById[s.id].type === 'metro' ? 'Metro' : 'Bus stop'} &middot; ${SHELTER[stopById[s.id].shelter]}</span></span>
+        <span class="nm"><strong>${esc(fName(s.id))}</strong><span>${stopById[s.id].type === 'metro' ? 'Metro' : 'Bus stop'} &middot; ${SHELTER[stopById[s.id].shelter]}</span>${stopById[s.id].walk ? `<span class="walk">${esc(stopById[s.id].walk)}</span>` : ''}</span>
         ${t ? `<time>${hm(t)}</time>` : ''}
         <button class="star ${f ? 'on' : ''}" type="button" data-fav="${k}" aria-pressed="${f}" aria-label="${f ? 'Remove' : 'Save'} ${esc(sName(s.id))}"><svg aria-hidden="true"><use href="#${f ? 'i-star-fill' : 'i-star'}"/></svg></button></li>`;
     }).join('');
@@ -311,7 +311,7 @@
         <h2 id="sr-title">${esc(dirLabel(r, dir))}</h2>
         <button class="icon-btn" type="button" data-close aria-label="Close"><svg aria-hidden="true"><use href="#i-close"/></svg></button>
       </div>
-      <p class="lead">${esc(r.note)}</p>
+      <p class="lead">${esc(r.note)}<br><b>Fare:</b> ${esc(r.fare)} (indicative Nol fare)</p>
       <div class="next-box">
         ${next ? `<div><small>Next from ${esc(sName(stop))}</small><div class="cd" data-dep="${next}">${cdText(next)}</div></div>
         <div><small>Departs</small><b style="font-size:1.4rem;font-variant-numeric:tabular-nums">${hm(next)}</b>${dayTag(next)}</div>` : '<div>No departures in the next 36 hours</div>'}
@@ -413,16 +413,18 @@
     const b = $('#btn-wake');
     b.setAttribute('aria-pressed', String(on));
     $('#wake-text').textContent = 'Keep screen awake: ' + (on ? 'On' : 'Off');
-    $('#g-hint').textContent = 'wakeLock' in navigator
+    $('#g-hint').textContent = wakeMsg ? wakeMsg : 'wakeLock' in navigator
       ? (on ? 'Screen will stay on. Prop the phone up and watch the countdown.' : 'Turn on to stop the screen dimming while you wait.')
       : 'Screen Wake Lock is not supported in this browser (iOS needs 16.4 or newer).';
   }
+  let wakeMsg = '';
   async function requestWake() {
-    if (!('wakeLock' in navigator)) { toast('Keep-awake is not supported on this device'); state.wantWake = false; updateWakeUi(); return; }
+    wakeMsg = '';
+    if (!('wakeLock' in navigator)) { state.wantWake = false; wakeMsg = 'This browser cannot keep the screen awake. Set Settings > Display & Brightness > Auto-Lock to Never (iPhone) or Screen timeout to a longer time (Android) while you wait.'; updateWakeUi(); return; }
     try {
       wakeLock = await navigator.wakeLock.request('screen');
       wakeLock.addEventListener('release', () => { wakeLock = null; updateWakeUi(); });
-    } catch (e) { wakeLock = null; state.wantWake = false; toast('Could not keep the screen awake'); }
+    } catch (e) { wakeLock = null; state.wantWake = false; wakeMsg = 'Keep-awake was refused (low battery or power saver can block it). Raise the Auto-Lock / Screen timeout in system settings instead.'; }
     updateWakeUi();
   }
   async function releaseWake() { state.wantWake = false; if (wakeLock) { try { await wakeLock.release(); } catch (e) { /* ignore */ } } wakeLock = null; updateWakeUi(); }
@@ -579,6 +581,33 @@
     });
     $('#mode-list').addEventListener('click', (e) => { const b = e.target.closest('[data-theme-pick]'); if (b) applyTheme(b.dataset.themePick, true); });
 
+    $('#btn-swap').addEventListener('click', (e) => {
+      state.dir = state.dir === 'out' ? 'in' : 'out'; store.set('dir', state.dir);
+      e.currentTarget.classList.toggle('spin'); renderControls(); renderBoardSelect(); renderAll();
+    });
+    $('#btn-refresh').addEventListener('click', async (e) => {
+      const b = e.currentTarget; b.classList.remove('spin'); void b.offsetWidth; b.classList.add('spin');
+      tick(true);
+      try { const reg = await navigator.serviceWorker.getRegistration(); if (reg) await reg.update(); toast('Times recalculated. Schedule is up to date'); }
+      catch (err) { toast('Times recalculated from your clock'); }
+    });
+    $('#btn-reset').addEventListener('click', async () => {
+      if (!confirm('Clear saved settings and cached files, then reload?')) return;
+      try { Object.keys(localStorage).filter((k) => k.startsWith('jaf.')).forEach((k) => localStorage.removeItem(k)); } catch (err) { /* ignore */ }
+      try { (await navigator.serviceWorker.getRegistrations()).forEach((r) => r.unregister()); } catch (err) { /* ignore */ }
+      try { (await caches.keys()).forEach((k) => caches.delete(k)); } catch (err) { /* ignore */ }
+      setTimeout(() => location.replace(location.pathname), 300);
+    });
+    $('#fav-list').addEventListener('click', (e) => {
+      if (!e.target.closest('[data-cta="browse"]')) return;
+      state.area = 'industrial'; state.shift = 'now'; store.set('area', state.area); store.set('shift', state.shift);
+      renderControls(); showTab('home');
+    });
+    // gentle haptics on taps (where supported)
+    document.addEventListener('click', (e) => {
+      if (state.theme === 'oled') return;
+      if (e.target.closest('.chip, .tabbar button, .star, .seg button, .btn, .row') && navigator.vibrate) navigator.vibrate(10);
+    });
     $('#glance-close').addEventListener('click', closeGlance);
     $('#btn-wake').addEventListener('click', toggleWake);
 

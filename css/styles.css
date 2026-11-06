@@ -347,7 +347,9 @@ html[data-theme="sun"] .glance .icon-btn { background: #000; color: #ffe100; }
 html[data-theme="sun"] .g-clock { font-weight: 800; }
 html[data-theme="oled"] .g-clock { color: var(--accent); }
 .g-date { text-align: center; font-size: 1.1rem; opacity: .8; margin-bottom: 4vh; }
-.g-list { display: grid; gap: 12px; }
+.g-list { display: grid; gap: 12px; margin-block: auto; padding-block: 12px; }
+.glance { padding-bottom: calc(var(--sab) + 32px); min-height: 100dvh; }
+.g-clock { margin-top: 3vh; }
 .g-item { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 14px 16px; border-radius: 22px; background: var(--surface); border: var(--bw) solid var(--border); }
 .g-item .rbadge { min-width: 62px; height: 50px; font-size: 1.3rem; }
 .g-item .where { min-width: 0; display: grid; } .g-item .where strong { font-size: 1rem; line-height: 1.2; } .g-item .where span { font-size: .8rem; opacity: .75; }
@@ -359,6 +361,24 @@ html[data-theme="oled"] .g-clock { color: var(--accent); }
 html[data-theme="sun"] .btn.wake[aria-pressed="true"] { background: #000; color: #ffe100; }
 html[data-theme="oled"] .btn.wake[aria-pressed="true"] { background: var(--accent); color: #000; }
 .g-foot .fine { text-align: center; color: inherit; opacity: .7; }
+
+/* swap, refresh, fare, CTA */
+.seg { grid-template-columns: 1fr auto 1fr; align-items: center; }
+.seg .swap { min-height: 44px; width: 44px; border-radius: 50%; padding: 0; display: grid; place-items: center; background: var(--surface); border: var(--bw) solid var(--border); }
+.seg .swap svg { width: 22px; height: 22px; transition: transform .45s var(--spring); }
+.seg .swap.spin svg { transform: rotate(180deg); }
+.refresh { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.14); color: inherit; align-self: center; }
+.refresh svg { width: 18px; height: 18px; }
+.refresh.spin svg { animation: spin .7s linear; }
+@keyframes spin { to { transform: rotate(360deg); } }
+html[data-theme="sun"] .refresh { background: #ffe100; color: #000; }
+html[data-theme="oled"] .refresh { background: transparent; border: 1px solid var(--border); }
+.b.fare { color: var(--accent); border-color: currentColor; }
+html[data-theme="sun"] .b.fare { color: #000; }
+.cta { margin-top: 12px; }
+.tl .walk { color: var(--ok); font-weight: 600; }
+.wake-note { background: var(--surface2); border: var(--bw) solid var(--border); border-radius: 14px; padding: 10px 12px; font-size: .85rem; }
+html[data-theme="standard"] .glance .wake-note { background: rgba(255,255,255,.12); }
 
 /* ---------- Toast ---------- */
 .toast {
