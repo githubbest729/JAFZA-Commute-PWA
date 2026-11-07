@@ -25,15 +25,15 @@
   <meta property="og:site_name" content="JAFZA Commute">
   <meta property="og:title" content="Jebel Ali &amp; Discovery Gardens Bus Timetable">
   <meta property="og:description" content="Offline-first bus times for shift workers: Discovery Gardens, JAFZA and Jebel Ali Industrial. Next-bus countdown, pocket mode and Metro links.">
-  <meta property="og:url" content="https://githubbest729.github.io/JAFZA-Commute-PWA/">
-  <meta property="og:image" content="https://githubbest729.github.io/JAFZA-Commute-PWA/og-image.png">
+  <meta property="og:url" content="https://YOUR-USERNAME.github.io/jebel-ali-pwa/">
+  <meta property="og:image" content="https://YOUR-USERNAME.github.io/jebel-ali-pwa/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Jebel Ali and Discovery Gardens Bus Timetable">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Jebel Ali &amp; Discovery Gardens Bus Timetable">
   <meta name="twitter:description" content="Offline-first bus times for shift workers: Discovery Gardens, JAFZA and Jebel Ali Industrial.">
-  <meta name="twitter:image" content="https://githubbest729.github.io/JAFZA-Commute-PWA/og-image.png">
+  <meta name="twitter:image" content="https://YOUR-USERNAME.github.io/jebel-ali-pwa/og-image.png">
 
   <script>
     /* Apply saved display mode before first paint (no flash). */
@@ -100,15 +100,22 @@
 
   <!-- HOME -->
   <section id="view-home" class="view is-active" aria-label="Timetable">
-    <div class="hero" id="hero" aria-live="polite"></div>
+    <div class="ptr" id="ptr" aria-hidden="true"><svg id="ptr-bus"><use href="#i-bus"/></svg><span id="ptr-txt">Pull to refresh</span></div>
+    <div class="bento">
+      <div class="tile hero" id="hero" aria-live="polite"></div>
+      <div class="tile t-status" id="tile-status"></div>
+      <div class="tile t-metro" id="tile-metro"></div>
+      <div class="tile t-saved" id="tile-saved"></div>
+    </div>
 
     <div class="panel controls">
       <div class="seg" id="seg-dir" role="group" aria-label="Direction">
-        <button type="button" data-dir="out">Discovery Gardens <b>&rarr;</b> JAFZA</button>
+        <button type="button" data-dir="out">Outbound <b>&rarr;</b></button>
         <button type="button" class="swap" id="btn-swap" aria-label="Swap direction"><svg aria-hidden="true" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4m4 4H7"/></g></svg></button>
-        <button type="button" data-dir="in">JAFZA <b>&rarr;</b> Discovery Gardens</button>
+        <button type="button" data-dir="in"><b>&larr;</b> Return</button>
       </div>
 
+      <p class="fine hint">Outbound runs each route from its first stop to its last; the cards show the exact terminals.</p>
       <div class="label">Zone</div>
       <div class="chips" id="chips-area" role="group" aria-label="JAFZA zone"></div>
 
@@ -149,16 +156,6 @@
       </button>
     </div>
 
-        <h2 class="h2">Nol Card Balance Check</h2>
-    <div class="panel nol-calc">
-      <p style="font-size:0.9rem; margin-bottom:10px;">Verify if your Nol card meets the mandatory RTA AED 7.50 check-in threshold:</p>
-      <div style="display:flex; gap:10px; align-items:center;">
-        <input type="number" id="nol-balance-input" step="0.5" placeholder="Enter AED balance (e.g. 15)" style="padding:10px; border-radius:10px; border:1px solid var(--border); font-size:1rem; flex:1; background:var(--surface); color:var(--text);">
-        <button type="button" class="btn primary" id="btn-check-nol" style="padding:10px 16px;">Check</button>
-      </div>
-      <div id="nol-result" style="margin-top:10px; font-weight:600; font-size:0.95rem;"></div>
-    </div>
-
     <h2 class="h2">App</h2>
     <div class="panel list-rows">
       <button type="button" class="row" id="btn-a2hs"><svg aria-hidden="true"><use href="#i-plus-box"/></svg><span>Add to Home Screen<small>Step-by-step guide for iPhone</small></span></button>
@@ -166,6 +163,17 @@
       <button type="button" class="row" id="btn-share-set"><svg aria-hidden="true"><use href="#i-share"/></svg><span>Share this app<small>Send the link to a colleague</small></span></button>
       <button type="button" class="row" id="btn-reset"><svg aria-hidden="true"><use href="#i-wifi-off"/></svg><span>Clear cache &amp; reload schedule<small>Recovery if anything looks wrong. Also clears saved settings</small></span></button>
       <button type="button" class="row" id="btn-clear-favs"><svg aria-hidden="true"><use href="#i-star"/></svg><span>Clear favorites<small id="fav-count">0 saved</small></span></button>
+    </div>
+
+    <h2 class="h2">Nol trip calculator</h2>
+    <div class="panel nol">
+      <label class="field"><span class="label">Card balance (AED)</span>
+        <input id="nol-bal" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 12.50"></label>
+      <div class="two">
+        <label class="field"><span class="label">Card</span><select id="nol-card"><option value="silver">Silver</option><option value="gold">Gold</option></select></label>
+        <label class="field"><span class="label">Journey</span><select id="nol-zones"><option value="1">1 zone</option><option value="2">2 adjacent zones</option></select></label>
+      </div>
+      <div class="nol-result" id="nol-result" role="status" aria-live="polite">Enter your balance to check it.</div>
     </div>
 
     <h2 class="h2">About</h2>

@@ -32,11 +32,20 @@ The app itself loads nothing from the network.
 - Share route (`navigator.share`, clipboard fallback), dynamic Open Graph tags, deep links `?route=F43&dir=out&stop=DG_METRO`
 - Manifest shortcuts: Next Bus to JAFZA, Discovery Gardens Metro, Night Shift Buses
 
+## What's new in v1.2.0
+
+- Network data rebuilt from the brief: F43, F44, F46, F54, 99, 91 with named stops, Metro exits and RTA Nol fares (Silver / Gold)
+- Bento home: next-bus banner, heat notice, Red Line transfer countdown, saved-route badges
+- Subway-style route strip with Red Line and AC Shelter pills, live bus progress bar, Nol trip calculator in Settings
+- Swipe-to-dismiss route sheet and pull-to-refresh; Pocket mode route color blocks; stronger Direct Sunlight mode
+
 ## Updating schedules
 
 Edit `js/transit-data.js` (service windows, headways, stop offsets). Then bump `VERSION` in `sw.js` so installed copies
-drop their old cache. **The bundled timetable is illustrative sample data, not an official RTA feed.** Replace it with
-real timings from RTA / S'hail before relying on it.
+drop their old cache. **Data confidence:** Nol fares and the 30-minute transfer rule follow the RTA fare page; route termini follow RTA's route list.
+Intermediate stops, Metro exits, headways, stop-to-stop minutes, fare band per route, Red Line train frequency, the outdoor
+temperature estimate and the AED 7.50 minimum balance are NOT verified. Replace them with real timings from RTA / S'hail
+before relying on them.
 
 ## Files
 

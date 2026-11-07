@@ -4,7 +4,7 @@
  * Navigations   : network (short timeout) -> cached app shell -> offline.html
  * Bump VERSION on every release: old caches are deleted on activate.
  */
-const VERSION = 'v1.2.2';
+const VERSION = 'v1.2.0';
 const STATIC_CACHE = `jaf-static-${VERSION}`;
 const DATA_CACHE = `jaf-data-${VERSION}`;
 
