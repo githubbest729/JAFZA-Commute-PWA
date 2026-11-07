@@ -15,7 +15,7 @@
  * Bump APP_VERSION here, in sw.js (VERSION) together when you change anything.
  */
 window.TRANSIT_DATA = {
-  APP_VERSION: '1.2.0',
+  APP_VERSION: '1.2.1',
   DATA_VERSION: '2026.11.2',
 
   // metro:true = stop is at a Red Line station (interchange). shelter: ac | covered | open. walk = exit guidance (from brief).

@@ -44,7 +44,30 @@
       document.addEventListener('DOMContentLoaded', function () { document.getElementById('meta-theme').content = c; });
     } catch (e) {}
   </script>
-  <link rel="stylesheet" href="css/styles.css">
+  <script>
+    /* Boot watchdog: if the app script does not start, show the real error and a recovery button instead of a blank screen. */
+    window.__jafErr = [];
+    window.addEventListener('error', function (e) { window.__jafErr.push((e.message || 'Script error') + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : '')); });
+    window.addEventListener('unhandledrejection', function (e) { window.__jafErr.push('Promise: ' + (e.reason && e.reason.message || e.reason)); });
+    window.__jafFail = function (msg) {
+      if (document.getElementById('jaf-fail')) return;
+      var d = document.createElement('div'); d.id = 'jaf-fail'; d.setAttribute('role', 'alert');
+      d.style.cssText = 'position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:999;background:#fff3cd;color:#3b2a00;border:3px solid #b45309;border-radius:16px;padding:14px;font:15px/1.4 -apple-system,Segoe UI,Roboto,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.35)';
+      d.innerHTML = '<b>The timetable could not start.</b><br>Your phone may be holding an old copy of the app. Tap <b>Clear cache &amp; reload</b>.<br><small style="word-break:break-word;opacity:.8"></small><div style="display:flex;gap:8px;margin-top:10px"><button id="jaf-r1" style="flex:1;min-height:46px;border-radius:12px;border:2px solid #3b2a00;background:#fff;font:inherit;font-weight:700">Reload</button><button id="jaf-r2" style="flex:1;min-height:46px;border-radius:12px;border:0;background:#b45309;color:#fff;font:inherit;font-weight:700">Clear cache &amp; reload</button></div>';
+      d.querySelector('small').textContent = String(msg || window.__jafErr.join(' | ') || 'No error message available').slice(0, 300);
+      document.body.appendChild(d);
+      document.getElementById('jaf-r1').onclick = function () { location.reload(); };
+      document.getElementById('jaf-r2').onclick = function () {
+        var done = function () { location.replace(location.pathname); };
+        Promise.all([
+          navigator.serviceWorker ? navigator.serviceWorker.getRegistrations().then(function (r) { return Promise.all(r.map(function (x) { return x.unregister(); })); }) : 0,
+          window.caches ? caches.keys().then(function (k) { return Promise.all(k.map(function (x) { return caches.delete(x); })); }) : 0
+        ]).then(done, done);
+      };
+    };
+    setTimeout(function () { if (!window.__jafBooted) window.__jafFail(); }, 3000);
+  </script>
+  <link rel="stylesheet" href="css/styles.css?v=1.2.1">
 </head>
 <body>
 
@@ -267,7 +290,7 @@
 
 <noscript><p style="padding:24px;font-family:sans-serif">This guide needs JavaScript. Please enable it to see bus times.</p></noscript>
 
-<script src="js/transit-data.js"></script>
-<script src="js/app.js"></script>
+<script src="js/transit-data.js?v=1.2.1"></script>
+<script src="js/app.js?v=1.2.1"></script>
 </body>
 </html>

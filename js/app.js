@@ -5,6 +5,7 @@
   const D = window.TRANSIT_DATA;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const on = (sel, ev, fn, opt) => { const el = typeof sel === 'string' ? document.querySelector(sel) : sel; if (el) el.addEventListener(ev, fn, opt); };
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const pad = (n) => String(n).padStart(2, '0');
   const DAY = 1440;
@@ -235,6 +236,7 @@
     return out[0] ? [out[0], out[0] + D.metro.otherDirOffset * MIN] : [null, null];
   }
   function renderTiles(cards) {
+    if (!$('#tile-status') || !$('#tile-metro') || !$('#tile-saved')) return;
     const hot = heatNow();
     const st = $('#tile-status');
     st.className = 'tile t-status ' + hot.cls;
@@ -628,7 +630,7 @@
   function initNol() {
     const sv = store.get('nol', null);
     if (sv) { $('#nol-bal').value = sv.bal || ''; if (sv.card) $('#nol-card').value = sv.card; if (sv.zones) $('#nol-zones').value = sv.zones; }
-    ['input', 'change'].forEach((ev) => ['#nol-bal', '#nol-card', '#nol-zones'].forEach((s) => $(s).addEventListener(ev, calcNol)));
+    ['input', 'change'].forEach((ev) => ['#nol-bal', '#nol-card', '#nol-zones'].forEach((s) => on(s, ev, calcNol)));
     calcNol();
   }
 
@@ -697,20 +699,20 @@
     $('#chips-area').innerHTML = Object.entries(D.areas).map(([k, v]) => `<button class="chip" type="button" data-area="${k}" aria-pressed="false">${esc(v)}</button>`).join('');
     $('#chips-shift').innerHTML = Object.entries(D.shifts).map(([k, v]) => `<button class="chip" type="button" data-shift="${k}" aria-pressed="false">${esc(v.label)}</button>`).join('');
 
-    $('#seg-dir').addEventListener('click', (e) => {
+    on('#seg-dir', 'click', (e) => {
       const b = e.target.closest('[data-dir]'); if (!b) return;
       state.dir = b.dataset.dir; store.set('dir', state.dir);
       renderControls(); renderBoardSelect(); renderAll();
     });
-    $('#chips-area').addEventListener('click', (e) => {
+    on('#chips-area', 'click', (e) => {
       const b = e.target.closest('[data-area]'); if (!b) return;
       state.area = b.dataset.area; store.set('area', state.area); renderControls(); renderAll();
     });
-    $('#chips-shift').addEventListener('click', (e) => {
+    on('#chips-shift', 'click', (e) => {
       const b = e.target.closest('[data-shift]'); if (!b) return;
       state.shift = b.dataset.shift; store.set('shift', state.shift); renderControls(); renderAll();
     });
-    $('#sel-board').addEventListener('change', (e) => { state.board = e.target.value; store.set('board', state.board); renderAll(); });
+    on('#sel-board', 'change', (e) => { state.board = e.target.value; store.set('board', state.board); renderAll(); });
 
     const cardClick = (e) => {
       const fav = e.target.closest('[data-fav]');
@@ -721,57 +723,57 @@
     const cardKey = (e) => {
       if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-route]')) { e.preventDefault(); cardClick(e); }
     };
-    ['#route-list', '#fav-list'].forEach((s) => { $(s).addEventListener('click', cardClick); $(s).addEventListener('keydown', cardKey); });
+    ['#route-list', '#fav-list'].forEach((s) => { on(s, 'click', cardClick); on(s, 'keydown', cardKey); });
 
-    $('#sheet-route').addEventListener('click', (e) => {
+    on('#sheet-route', 'click', (e) => {
       if (e.target.closest('[data-close]')) return closeSheets();
       if (e.target.closest('[data-share]')) return shareRoute();
       const fav = e.target.closest('[data-fav]');
       if (fav) toggleFav(fav.dataset.fav);
     });
-    $('#sheet-a2hs').addEventListener('click', (e) => { if (e.target.closest('[data-close]')) closeSheets(); });
-    $('#a2-never').addEventListener('click', () => { store.set('a2hsNever', true); closeSheets(); toast('You can find this in Settings'); });
-    $('#backdrop').addEventListener('click', closeSheets);
+    on('#sheet-a2hs', 'click', (e) => { if (e.target.closest('[data-close]')) closeSheets(); });
+    on('#a2-never', 'click', () => { store.set('a2hsNever', true); closeSheets(); toast('You can find this in Settings'); });
+    on('#backdrop', 'click', closeSheets);
 
-    $('#tabbar').addEventListener('click', (e) => {
+    on('#tabbar', 'click', (e) => {
       const b = e.target.closest('button'); if (!b) return;
       if (b.id === 'tab-glance') return openGlance();
       if (b.dataset.tab) { closeSheets(); showTab(b.dataset.tab); }
     });
-    $('#btn-theme').addEventListener('click', cycleTheme);
-    $('#btn-share-app').addEventListener('click', shareApp);
-    $('#btn-share-set').addEventListener('click', shareApp);
-    $('#btn-a2hs').addEventListener('click', openA2hs);
-    $('#btn-install').addEventListener('click', async () => {
+    on('#btn-theme', 'click', cycleTheme);
+    on('#btn-share-app', 'click', shareApp);
+    on('#btn-share-set', 'click', shareApp);
+    on('#btn-a2hs', 'click', openA2hs);
+    on('#btn-install', 'click', async () => {
       if (!deferredPrompt) return;
       deferredPrompt.prompt();
       try { await deferredPrompt.userChoice; } catch (e) { /* ignore */ }
       deferredPrompt = null; $('#btn-install').hidden = true;
     });
-    $('#btn-clear-favs').addEventListener('click', () => {
+    on('#btn-clear-favs', 'click', () => {
       if (!state.favs.length) return toast('No favorites to clear');
       if (confirm('Remove all favorite stops?')) { state.favs = []; store.set('favs', []); renderAll(); toast('Favorites cleared'); }
     });
-    $('#mode-list').addEventListener('click', (e) => { const b = e.target.closest('[data-theme-pick]'); if (b) applyTheme(b.dataset.themePick, true); });
+    on('#mode-list', 'click', (e) => { const b = e.target.closest('[data-theme-pick]'); if (b) applyTheme(b.dataset.themePick, true); });
 
-    $('#btn-swap').addEventListener('click', (e) => {
+    on('#btn-swap', 'click', (e) => {
       state.dir = state.dir === 'out' ? 'in' : 'out'; store.set('dir', state.dir);
       e.currentTarget.classList.toggle('spin'); renderControls(); renderBoardSelect(); renderAll();
     });
-    $('#btn-refresh').addEventListener('click', async (e) => {
+    on('#btn-refresh', 'click', async (e) => {
       const b = e.currentTarget; b.classList.remove('spin'); void b.offsetWidth; b.classList.add('spin');
       tick(true);
       try { const reg = await navigator.serviceWorker.getRegistration(); if (reg) await reg.update(); toast('Times recalculated. Schedule is up to date'); }
       catch (err) { toast('Times recalculated from your clock'); }
     });
-    $('#btn-reset').addEventListener('click', async () => {
+    on('#btn-reset', 'click', async () => {
       if (!confirm('Clear saved settings and cached files, then reload?')) return;
       try { Object.keys(localStorage).filter((k) => k.startsWith('jaf.')).forEach((k) => localStorage.removeItem(k)); } catch (err) { /* ignore */ }
       try { (await navigator.serviceWorker.getRegistrations()).forEach((r) => r.unregister()); } catch (err) { /* ignore */ }
       try { (await caches.keys()).forEach((k) => caches.delete(k)); } catch (err) { /* ignore */ }
       setTimeout(() => location.replace(location.pathname), 300);
     });
-    $('#fav-list').addEventListener('click', (e) => {
+    on('#fav-list', 'click', (e) => {
       if (!e.target.closest('[data-cta="browse"]')) return;
       state.area = 'industrial'; state.shift = 'now'; store.set('area', state.area); store.set('shift', state.shift);
       renderControls(); showTab('home');
@@ -782,13 +784,13 @@
       if (e.target.closest('.chip, .tabbar button, .star, .seg button, .btn, .row') && navigator.vibrate) navigator.vibrate(10);
     });
 /* ----- bento saved badges ----- */
-    $('#tile-saved').addEventListener('click', (e) => {
+    on('#tile-saved', 'click', (e) => {
       const b = e.target.closest('[data-open]'); if (!b) return;
       const p = parseKey(b.dataset.open); if (p) openRoute(p.r.id, p.dir, p.stop);
     });
     initGestures();
-    $('#glance-close').addEventListener('click', closeGlance);
-    $('#btn-wake').addEventListener('click', toggleWake);
+    on('#glance-close', 'click', closeGlance);
+    on('#btn-wake', 'click', toggleWake);
 
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape') return;
@@ -826,6 +828,10 @@
 
   /* ---------- init ---------- */
   function init() {
+    try { start(); window.__jafBooted = true; }
+    catch (e) { console.error(e); if (window.__jafFail) window.__jafFail((e && e.message) + (e && e.stack ? ' @ ' + String(e.stack).split('\n')[1] : '')); }
+  }
+  function start() {
     const launch = handleLaunch();
     absolutizeMeta();
     applyTheme(state.theme, false);
