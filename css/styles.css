@@ -524,3 +524,39 @@ html[data-theme="oled"] .ptr svg, html[data-theme="oled"] .prog-bus { animation:
 .g-item.solid { grid-template-columns: auto 1fr; row-gap: 8px; }
 .g-item.solid .cd { grid-column: 1 / -1; font-size: clamp(3.4rem, 19vw, 5rem); text-align: center; }
 .g-item.solid .where strong { font-size: 1.15rem; }
+
+/* ===================== v1.2.2 ===================== */
+/* 1. Filter chips: never clipped, momentum scroll, snap, edge fade */
+.controls { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.controls > * { min-width: 0; }
+.chips {
+  margin: 0; padding: 2px 22px 6px 14px; max-width: 100%;
+  scroll-snap-type: x mandatory; scroll-padding-inline: 14px; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 26px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 26px), transparent 100%);
+}
+.chip { scroll-snap-align: start; white-space: nowrap; }
+
+/* 3. Compact card badges */
+.badges { align-items: center; }
+.b.rule { background: var(--surface2); color: var(--muted); border: var(--bw) dashed currentColor; min-height: 28px; cursor: pointer; }
+.b.rule:active { transform: scale(.95); }
+html[data-theme="sun"] .b.rule { color: #000; }
+
+/* 4. Pocket mode: readable destination, amber departure, solid green wake indicator */
+.g-item .where strong, .g-item.solid .where strong { font-size: 1.25rem; font-weight: 800; line-height: 1.2; }
+.g-item .where span, .g-item.solid .where span { font-size: .95rem; opacity: 1; }
+.g-item .dep { background: #111; color: #ffc400; padding: 1px 9px; border-radius: 8px; font-weight: 800; font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+html[data-theme] .btn.wake[aria-pressed="true"] { background: #0e7a55; color: #fff; border: 3px solid #2ec4b6; }
+
+/* 5. Tabular figures everywhere a number ticks */
+.cd, .hero .cd, .route-next .cd, .g-item .cd, #clock, .g-clock, .tm, .tl time, .t-metro .m, .next-box .cd {
+  font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1;
+}
+
+/* 7. Nol top-up reminder on Home */
+.nol-alert { display: flex; width: 100%; text-align: left; align-items: center; gap: 8px; margin: 0 0 12px; padding: 12px 14px; border-radius: 16px; font-weight: 700; line-height: 1.3;
+  background: #fff0cc; color: #6a4300; border: var(--bw) solid #6a4300; }
+.nol-alert::before { content: "!"; flex: none; width: 24px; height: 24px; border-radius: 50%; background: #6a4300; color: #fff0cc; display: grid; place-items: center; font-weight: 800; }
+html[data-theme="sun"] .nol-alert { background: #fff; color: #8f0000; border: 3px solid #8f0000; } html[data-theme="sun"] .nol-alert::before { background: #8f0000; color: #fff; }
+html[data-theme="oled"] .nol-alert { background: #000; color: var(--warn); border-color: var(--warn); } html[data-theme="oled"] .nol-alert::before { background: var(--warn); color: #000; }

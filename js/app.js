@@ -115,12 +115,12 @@
 
   /* ---------- toast ---------- */
   let toastTimer;
-  function toast(msg) {
+  function toast(msg, ms) {
     const el = $('#toast');
     el.textContent = msg;
     el.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+    toastTimer = setTimeout(() => el.classList.remove('show'), ms || 2600);
   }
 
   /* ---------- theme ---------- */
@@ -151,6 +151,9 @@
     return D.stops.filter((s) => seen.has(s.id));
   }
   function renderControls() {
+    $('#dir-hint').textContent = state.dir === 'out'
+      ? 'Outbound: Heading towards JAFZA, DIP & Al Furjan terminals.'
+      : 'Return: Heading towards Discovery Gardens & Ibn Battuta Metro.';
     $$('#seg-dir [data-dir]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.dir === state.dir)));
     $$('#chips-area .chip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.area === state.area)));
     $$('#chips-shift .chip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.shift === state.shift)));
@@ -178,7 +181,7 @@
   }
   function stopBadges(id, r) {
     const s = stopById[id];
-    return `<div class="badges"><span class="b">Bus stop</span><span class="b ${s.shelter}">${SHELTER[s.shelter]}</span>${r ? `<span class="b fare">Silver: AED ${fmtAed(D.fares.zones[r.zones].silver)}</span><span class="micro">${esc(D.fares.note)}</span>` : ''}</div>`;
+    return `<div class="badges"><span class="b">Bus stop</span><span class="b ${s.shelter}">${SHELTER[s.shelter]}</span>${r ? `<span class="b fare">Silver: AED ${fmtAed(D.fares.zones[r.zones].silver)}</span><button class="b rule" type="button" data-rule aria-label="30 minute Metro transfer rule. Tap for details" title="${esc(D.fares.note)}">30m Metro Transfer Rule</button>` : ''}</div>`;
   }
   function cardHtml(c, dir) {
     const { r, seq, boardId, idx, deps } = c;
@@ -229,6 +232,13 @@
     else if (t >= 33) { cls = 'warm'; msg = 'Hot - wait in the shade and carry water'; }
     return { t, cls, msg };
   }
+  /* "In 4 min" style relative time (no confusing clock times) */
+  function relText(ms) {
+    const m = Math.ceil((ms - Date.now()) / MIN);
+    if (m <= 0) return 'Now';
+    if (m >= 60) return `In ${Math.floor(m / 60)}h ${pad(m % 60)}m`;
+    return `In ${m} min`;
+  }
   function metroTimes() {
     const now = Date.now(), m0 = midnight(), out = [];
     D.metro.windows.forEach(([a, b, h]) => { for (let t = toMin(a); t < toMin(b); t += h) [0, 1].forEach((d) => { const ms = m0 + (t + d * DAY) * MIN; if (ms >= now) out.push(ms); }); });
@@ -247,8 +257,8 @@
     if (top) { const m = top.seq.map((s) => stopById[s.id]).find((s) => s.metro); if (m) station = m.metroName; }
     const [toUae, toCp] = metroTimes();
     $('#tile-metro').innerHTML = `<div class="t-eyebrow"><i class="mdot"></i>Red Line &middot; ${esc(station)}</div>
-      <div class="row2"><span>To UAE Exchange<span class="m cd" ${toUae ? `data-dep="${toUae}"` : ''}>${toUae ? cdText(toUae) : '--'}</span></span>
-      <span>To Centrepoint<span class="m cd" ${toCp ? `data-dep="${toCp}"` : ''}>${toCp ? cdText(toCp) : '--'}</span></span></div>
+      <div class="row2"><span>To UAE Exchange<span class="m cd" ${toUae ? `data-rel="${toUae}"` : ''}>${toUae ? relText(toUae) : '--'}</span></span>
+      <span>To Centrepoint<span class="m cd" ${toCp ? `data-rel="${toCp}"` : ''}>${toCp ? relText(toCp) : '--'}</span></span></div>
       <div class="t-note">Approximate train times</div>`;
 
     const favs = state.favs.map(parseKey).filter(Boolean);
@@ -532,7 +542,7 @@
     $('#g-list').innerHTML = items.length
       ? items.map(({ r, dir, stop, dep }) => `<div class="g-item solid" style="--rc:${r.color};--ink:${r.ink || '#fff'}">
           <span class="rbadge">${esc(r.id)}</span>
-          <div class="where"><strong>${esc(sName(stop))} &rarr; ${esc(sName(seqFor(r, dir).slice(-1)[0].id))}</strong><span>departs ${hm(dep)}${fallback ? '' : ' &middot; favorite'}</span></div>
+          <div class="where"><strong>${esc(sName(stop))} &rarr; ${esc(sName(seqFor(r, dir).slice(-1)[0].id))}</strong><span>departs <b class="dep">${hm(dep)}</b>${fallback ? '' : ' &middot; favorite'}</span></div>
           <div class="cd" data-dep="${dep}">${cdText(dep)}</div></div>`).join('') +
         (fallback ? `<p class="fine g-empty" style="text-align:center">Showing the soonest buses. Star stops to pin your own here.</p>` : '')
       : '<div class="g-empty">No upcoming buses found.</div>';
@@ -590,6 +600,7 @@
     $('#g-date').textContent = dt;
     updateProg();
     let stale = false;
+    $$('[data-rel]').forEach((el) => { const ms = +el.dataset.rel; el.textContent = relText(ms); if (ms <= Date.now()) stale = true; });
     $$('[data-dep]').forEach((el) => {
       const dep = +el.dataset.dep;
       el.textContent = cdText(dep);
@@ -609,10 +620,18 @@
 
 
   /* ---------- Nol trip calculator ---------- */
+  function updateNolAlert(raw) {
+    const el = $('#nol-alert'); if (!el) return;
+    const v = raw === '' ? NaN : +raw;
+    if (isNaN(v) || v < 0 || v >= D.fares.minBalance) { el.hidden = true; return; }
+    el.hidden = false;
+    el.textContent = `Nol balance AED ${fmtAed(v)} is below AED ${fmtAed(D.fares.minBalance)}. Top up before boarding.`;
+  }
   function calcNol() {
     const out = $('#nol-result');
     const raw = $('#nol-bal').value.replace(',', '.').trim();
     store.set('nol', { bal: raw, card: $('#nol-card').value, zones: $('#nol-zones').value });
+    updateNolAlert(raw);
     if (raw === '' || isNaN(+raw) || +raw < 0) { out.className = 'nol-result'; out.textContent = 'Enter your balance to check it.'; return; }
     const bal = +raw, min = D.fares.minBalance;
     const fare = D.fares.zones[$('#nol-zones').value][$('#nol-card').value];
@@ -697,7 +716,7 @@
   function bind() {
     // build chips
     $('#chips-area').innerHTML = Object.entries(D.areas).map(([k, v]) => `<button class="chip" type="button" data-area="${k}" aria-pressed="false">${esc(v)}</button>`).join('');
-    $('#chips-shift').innerHTML = Object.entries(D.shifts).map(([k, v]) => `<button class="chip" type="button" data-shift="${k}" aria-pressed="false">${esc(v.label)}</button>`).join('');
+    $('#chips-shift').innerHTML = Object.entries(D.shifts).map(([k, v]) => `<button class="chip" type="button" data-shift="${k}" aria-pressed="false" aria-label="${esc(v.label)}">${esc(v.chip || v.label)}</button>`).join('');
 
     on('#seg-dir', 'click', (e) => {
       const b = e.target.closest('[data-dir]'); if (!b) return;
@@ -715,6 +734,7 @@
     on('#sel-board', 'change', (e) => { state.board = e.target.value; store.set('board', state.board); renderAll(); });
 
     const cardClick = (e) => {
+      if (e.target.closest('[data-rule]')) { e.stopPropagation(); toast(D.fares.note + '.', 4200); return; }
       const fav = e.target.closest('[data-fav]');
       if (fav) { e.stopPropagation(); toggleFav(fav.dataset.fav); return; }
       const card = e.target.closest('[data-route]');
@@ -789,6 +809,7 @@
       const p = parseKey(b.dataset.open); if (p) openRoute(p.r.id, p.dir, p.stop);
     });
     initGestures();
+    on('#nol-alert', 'click', () => { showTab('settings'); setTimeout(() => { const i = $('#nol-bal'); if (i) { i.scrollIntoView({ block: 'center' }); i.focus(); } }, 120); });
     on('#glance-close', 'click', closeGlance);
     on('#btn-wake', 'click', toggleWake);
 

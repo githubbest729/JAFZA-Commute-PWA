@@ -8,8 +8,8 @@ Plain HTML, CSS and vanilla JS. No build step, no dependencies.
 1. Create a repo (e.g. `jebel-ali-pwa`) and upload the **contents** of this folder to the repo root.
 2. Repo **Settings > Pages > Build and deployment**: Source = *Deploy from a branch*, Branch = `main`, folder = `/ (root)`.
 3. Open `https://<your-username>.github.io/jebel-ali-pwa/`.
-4. **Open Graph links:** in `index.html`, replace `https://YOUR-USERNAME.github.io/jebel-ali-pwa/` with your real URL
-   (link-preview crawlers need absolute URLs). Or do it automatically: use `tools/builder.html` (below) and paste your URL first.
+4. **Open Graph links:** `index.html` already points at `https://githubbest729.github.io/JAFZA-Commute-PWA/`. If you deploy elsewhere,
+   paste your address into `tools/builder.html` before downloading the ZIP and it rewrites the tags.
 
 All paths are relative, so it also works from a sub-folder or a custom domain.
 

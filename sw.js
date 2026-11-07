@@ -4,7 +4,7 @@
  * Navigations   : network (short timeout) -> cached app shell -> offline.html
  * Bump VERSION on every release: old caches are deleted on activate.
  */
-const VERSION = 'v1.2.1';
+const VERSION = 'v1.2.2';
 const STATIC_CACHE = `jaf-static-${VERSION}`;
 const DATA_CACHE = `jaf-data-${VERSION}`;
 
@@ -13,9 +13,9 @@ const PRECACHE = [
   'index.html',
   'offline.html',
   'manifest.webmanifest',
-  'css/styles.css?v=1.2.1',
-  'js/app.js?v=1.2.1',
-  'js/transit-data.js?v=1.2.1',
+  'css/styles.css?v=1.2.2',
+  'js/app.js?v=1.2.2',
+  'js/transit-data.js?v=1.2.2',
   'favicon.svg',
   'favicon.ico',
   'apple-touch-icon.png',

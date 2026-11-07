@@ -35,7 +35,7 @@
   <section>
     <h2>1. One-click ZIP</h2>
     <label for="base">Your GitHub Pages URL (used for Open Graph tags)</label>
-    <input id="base" type="url" placeholder="https://your-username.github.io/jebel-ali-pwa/">
+    <input id="base" type="url" value="https://githubbest729.github.io/JAFZA-Commute-PWA/" placeholder="https://your-username.github.io/your-repo/">
     <div class="row">
       <button id="zip">Download jebel-ali-pwa.zip</button>
     </div>
@@ -210,7 +210,7 @@ $('#zip').onclick = async () => {
         if (gen[path]) { data = gen[path]; log('generated ' + path); }
       }
       if (!data) { log('SKIPPED (not found) ' + path); continue; }
-      if (path === 'index.html' && base) data = data.replace(/https:\/\/YOUR-USERNAME\.github\.io\/jebel-ali-pwa\//g, base);
+      if (path === 'index.html' && base) data = data.replace(/https:\/\/(?:YOUR-USERNAME|githubbest729)\.github\.io\/[^"'\s\/]+\//g, base);
       collected.push({ name: 'jebel-ali-pwa/' + path, data });
     }
     log('Compressing...');

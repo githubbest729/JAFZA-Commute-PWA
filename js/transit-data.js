@@ -1,5 +1,5 @@
 /*
- * Jebel Ali & Discovery Gardens Transit Guide - network data (v1.2.0)
+ * Jebel Ali & Discovery Gardens Transit Guide - network data (v1.2.2)
  * ------------------------------------------------------------------
  * SOURCES AND CONFIDENCE
  *  - Nol fares (Silver 3 / 5 / 7.50, Gold 6 / 10 / 15) and the 30-minute transfer rule are from the RTA Nol fares
@@ -15,8 +15,8 @@
  * Bump APP_VERSION here, in sw.js (VERSION) together when you change anything.
  */
 window.TRANSIT_DATA = {
-  APP_VERSION: '1.2.1',
-  DATA_VERSION: '2026.11.2',
+  APP_VERSION: '1.2.2',
+  DATA_VERSION: '2026.11.3',
 
   // metro:true = stop is at a Red Line station (interchange). shelter: ac | covered | open. walk = exit guidance (from brief).
   stops: [
@@ -61,10 +61,10 @@ window.TRANSIT_DATA = {
 
   // Shift windows in minutes from midnight (15-minute margin each side so border-time buses are never hidden).
   shifts: {
-    now:     { label: 'Next buses', range: null },
-    morning: { label: 'Morning 05:00-08:30', short: 'Morning', range: [285, 525] },
-    evening: { label: 'Evening 16:30-20:30', short: 'Evening', range: [975, 1245] },
-    night:   { label: 'Night 21:00-02:00',   short: 'Night',   range: [1245, 1575] }
+    now:     { label: 'Next buses', chip: 'Next buses', range: null },
+    morning: { label: 'Morning 05:00-08:30', chip: 'Morning', short: 'Morning', range: [285, 525] },
+    evening: { label: 'Evening 16:30-20:30', chip: 'Evening', short: 'Evening', range: [975, 1245] },
+    night:   { label: 'Night 21:00-02:00',   chip: 'Night 21:00+', short: 'Night',   range: [1245, 1575] }
   },
 
   areas: { all: 'All zones', dg: 'Discovery Gardens', jafza: 'JAFZA', dip: 'DIP & Furjan' },
@@ -80,7 +80,7 @@ window.TRANSIT_DATA = {
   // Red Line train estimate for the Transfer tile (illustrative headways).
   metro: {
     windows: [['05:00', '08:00', 6], ['08:00', '16:00', 8], ['16:00', '21:00', 6], ['21:00', '24:00', 10]],
-    otherDirOffset: 2
+    otherDirOffset: 3
   },
 
   // stops: [stopId, minutes from first stop] outbound (towards JAFZA / DIP / Furjan / Jebel Ali). Inbound = reverse.
